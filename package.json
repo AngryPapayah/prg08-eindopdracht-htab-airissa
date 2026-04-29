@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "scripts": {
+    "agent": "node --env-file=.env agent.js",
+    "start": "node --env-file=.env server.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^1.1.42",
+    "@langchain/openai": "^1.4.5",
+    "@langchain/textsplitters": "^1.0.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "langchain": "^1.3.5"
+  }
+}

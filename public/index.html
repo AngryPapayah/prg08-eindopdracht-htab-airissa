@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTab — Hudson Bar & Kitchen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="header-logo">
+                <span class="logo-est">EST. 2010</span>
+                <h1>HUDSON</h1>
+                <span class="logo-sub">BAR &amp; KITCHEN</span>
+            </div>
+            <p class="subtitle">HTab — Bar Agent &middot; Leiden</p>
+        </header>
+
+        <div id="chat-window">
+            <div id="messages">
+                <div class="agent-row">
+                    <img src="images/hudson-logo.jpg" class="agent-logo" alt="Hudson" />
+                    <div class="message assistant welcome">
+                        Welkom bij HTab. Stel je vraag over een cocktail, drankje of recept — ik zoek het direct op.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form id="chat-form">
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Vraag een recept, ingrediënt of suggestie..."
+                autocomplete="off"
+                autofocus
+            />
+            <button type="submit" id="send-btn">Stuur</button>
+        </form>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
