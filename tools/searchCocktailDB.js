@@ -7,6 +7,10 @@ export const searchCocktailDB = tool(
         console.log(`🔧 searchCocktailDB aanroepen: "${cocktailName}"`);
 
         const response = await fetch(url);
+        if (!response.ok) {
+            console.log(`❌ searchCocktailDB: API-fout (${response.status}) voor "${cocktailName}"`);
+            return `BRON: thecocktailDB\n\nAPI-fout (${response.status}) bij ophalen van "${cocktailName}".`;
+        }
         const data = await response.json();
 
         if (!data.drinks) {
@@ -25,11 +29,12 @@ export const searchCocktailDB = tool(
 
         console.log(`✅ searchCocktailDB: gevonden "${drink.strDrink}"`);
 
-        return `BRON: thecocktailDB\n\nNaam: ${drink.strDrink}\nGlas: ${drink.strGlass}\nIngrediënten: ${ingredients.join(", ")}\nBereidingswijze: ${drink.strInstructions}`;
+        const imageMarker = drink.strDrinkThumb ? `\nAFBEELDING: ${drink.strDrinkThumb}` : "";
+        return `BRON: thecocktailDB\n\nNaam: ${drink.strDrink}\nGlas: ${drink.strGlass}\nIngrediënten: ${ingredients.join(", ")}\nBereidingswijze: ${drink.strInstructions}${imageMarker}`;
     },
     {
         name: "searchCocktailDB",
-        description: "Zoek een cocktailrecept via de thecocktailDB API. Gebruik dit ALLEEN als searchHudsonKnowledge het antwoord niet heeft.",
+        description: "Zoek een cocktailrecept via de thecocktailDB API. Gebruik dit UITSLUITEND als searchHudsonKnowledge 'Geen informatie' heeft teruggegeven. Als Hudson een recept heeft gevonden, roep deze tool dan NOOIT aan.",
         schema: z.object({
             cocktailName: z.string().describe("Naam van de cocktail, bijv. 'Margarita'"),
         }),

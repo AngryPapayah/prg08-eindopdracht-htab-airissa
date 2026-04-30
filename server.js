@@ -12,8 +12,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(join(__dirname, "public")));
 
-const EXPECTED_TOOLS = ["searchHudsonKnowledge", "searchCocktailDB"];
+const EXPECTED_TOOLS = ["searchHudsonKnowledge", "searchCocktailDB", "getWeather"];
 
+/**
+ * @param {any[]} messages
+ */
 function validateToolCalls(messages) {
     for (const msg of messages) {
         if (msg._getType() === "ai" && Array.isArray(msg.tool_calls)) {
@@ -29,8 +32,29 @@ function validateToolCalls(messages) {
     }
 }
 
+/**
+ * @param {any[]} messages
+ */
+function parseCocktailDbImage(messages) {
+    for (const msg of messages) {
+        if (msg._getType() !== "tool") continue;
+        const raw = typeof msg.content === "string"
+            ? msg.content
+            : Array.isArray(msg.content)
+                ? (/** @type {any[]} */ (msg.content)).map(c => (typeof c === "string" ? c : (c.text ?? ""))).join("\n")
+                : "";
+        const match = raw.match(/AFBEELDING: (https?:\/\/\S+)/);
+        if (match) return match[1];
+    }
+    return null;
+}
+
+/**
+ * @param {any[]} messages
+ */
 function parseSources(messages) {
-    const sources = [];
+    let hudsonUsed = false;
+    let cocktailDbUsed = false;
 
     for (const msg of messages) {
         if (msg._getType() !== "tool") continue;
@@ -38,19 +62,17 @@ function parseSources(messages) {
         const raw = typeof msg.content === "string"
             ? msg.content
             : Array.isArray(msg.content)
-                ? msg.content.map(c => (typeof c === "string" ? c : (c.text ?? ""))).join("\n")
+                ? (/** @type {any[]} */ (msg.content)).map(c => (typeof c === "string" ? c : (c.text ?? ""))).join("\n")
                 : "";
 
-        if (/BRON: Hudson receptenboekje/.test(raw) && !sources.includes("Hudson Receptenboekje")) {
-            sources.push("Hudson Receptenboekje");
-        }
-
-        if (raw.includes("BRON: thecocktailDB") && !sources.includes("thecocktailDB")) {
-            sources.push("thecocktailDB");
-        }
+        if (/BRON: Hudson receptenboekje/.test(raw)) hudsonUsed = true;
+        if (/BRON: thecocktailDB/.test(raw)) cocktailDbUsed = true;
     }
 
-    return sources;
+    // Als CocktailDB gebruikt is als fallback, is dat de echte bron van het antwoord
+    if (cocktailDbUsed) return ["thecocktailDB"];
+    if (hudsonUsed) return ["Hudson Receptenboekje"];
+    return [];
 }
 
 app.post("/chat", async (req, res) => {
@@ -73,14 +95,14 @@ app.post("/chat", async (req, res) => {
 
         const structured = result.structuredResponse;
         const answer = structured?.message ?? result.messages.at(-1)?.content;
-        const image = structured?.image ?? null;
+        const image = structured?.image ?? parseCocktailDbImage(result.messages);
 
         console.log(`📎 Bronnen: ${sources.join(", ") || "geen tools"} | Afbeelding: ${image}`);
 
         res.json({ answer, sources, image, sessionId });
 
     } catch (err) {
-        console.error("❌ Fout:", err.message);
+        console.error("❌ Fout:", err instanceof Error ? err.message : String(err));
         res.status(500).json({ error: "Er ging iets mis. Probeer het opnieuw." });
     }
 });

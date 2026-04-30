@@ -4,6 +4,7 @@ import { MemorySaver } from "@langchain/langgraph";
 import * as z from "zod";
 import { searchHudsonKnowledge } from "./tools/searchHudsonKnowledge.js";
 import { searchCocktailDB } from "./tools/searchCocktailDB.js";
+import { getWeather } from "./tools/getWeather.js";
 import { buildVectorStore } from "./vectorstore.js";
 
 // Vectorstore eenmalig opbouwen bij opstarten
@@ -27,11 +28,13 @@ Je helpt barpersoneel tijdens drukke diensten met snelle en directe antwoorden.
 
 Beschikbare tools:
 - searchHudsonKnowledge: zoekt in het Hudson kennisboekje (cocktails, bier, spirits, technieken). Gebruik dit ALTIJD als eerste bron.
-- searchCocktailDB: zoekt cocktailrecepten via de externe thecocktailDB API. Gebruik dit ALLEEN als searchHudsonKnowledge het antwoord niet heeft.
+- searchCocktailDB: zoekt cocktailrecepten via de externe thecocktailDB API. Gebruik dit UITSLUITEND als searchHudsonKnowledge de tekst "Geen informatie" teruggeeft.
+- getWeather: haalt het actuele weer op voor een stad. Gebruik dit als iemand vraagt welke dranken goed passen bij het huidige weer, of als een gast een weergerelateerde drankentip wil.
 
 Regels:
 - Gebruik searchHudsonKnowledge als eerste bron voor ELKE vraag over dranken, recepten of bartechnieken.
-- Gebruik searchCocktailDB alleen als fallback wanneer searchHudsonKnowledge het antwoord niet heeft.
+- Als searchHudsonKnowledge een duidelijk en specifiek antwoord teruggeeft over de gevraagde cocktail of drank, gebruik dan NIET searchCocktailDB.
+- Gebruik searchCocktailDB ALLEEN als searchHudsonKnowledge aangeeft dat er geen informatie is gevonden, of als de gevonden informatie niet over de specifiek gevraagde cocktail gaat.
 - Als je een recept vindt, geef dan ALTIJD de volledige ingrediënten en bereidingsstappen exact — laat niets weg.
 - Geef geen extra uitleg of inleiding bij recepten — begin meteen met glas, ijs, ingrediënten en bereiding.
 - Spreek collega's informeel aan: geen "u", gewoon "je".
@@ -41,7 +44,7 @@ Regels:
 
 export const agent = createReactAgent({
     llm: model,
-    tools: [searchHudsonKnowledge, searchCocktailDB],
+    tools: [searchHudsonKnowledge, searchCocktailDB, getWeather],
     prompt: SYSTEM_PROMPT,
     checkpointSaver: new MemorySaver(),
     responseFormat: responseSchema,

@@ -5,11 +5,17 @@ const sessionId = sessionStorage.getItem("htab_session_id") ?? (() => {
     return id;
 })();
 
-const messagesEl = document.getElementById("messages");
-const form = document.getElementById("chat-form");
-const input = document.getElementById("message-input");
-const sendBtn = document.getElementById("send-btn");
+const messagesEl = /** @type {HTMLElement} */ (document.getElementById("messages"));
+const form = /** @type {HTMLFormElement} */ (document.getElementById("chat-form"));
+const input = /** @type {HTMLInputElement} */ (document.getElementById("message-input"));
+const sendBtn = /** @type {HTMLButtonElement} */ (document.getElementById("send-btn"));
 
+/**
+ * @param {string} role
+ * @param {string} text
+ * @param {string[]} sources
+ * @param {string|null} image
+ */
 function appendMessage(role, text, sources = [], image = null) {
     const div = document.createElement("div");
     div.classList.add("message", role);
@@ -97,7 +103,8 @@ form.addEventListener("submit", async (e) => {
 
     } catch (err) {
         loadingEl.remove();
-        appendMessage("assistant", `Fout: ${err.message}. Probeer het opnieuw.`);
+        const msg = err instanceof Error ? err.message : String(err);
+        appendMessage("assistant", `Fout: ${msg}. Probeer het opnieuw.`);
     } finally {
         sendBtn.disabled = false;
         input.focus();

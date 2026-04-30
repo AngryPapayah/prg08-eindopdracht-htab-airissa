@@ -14,6 +14,10 @@ const DOC_TITLES = {
     "hudson-spirits-wines.txt": "Spirits & wijnen",
 };
 
+/**
+ * @param {number[]} a
+ * @param {number[]} b
+ */
 function cosineSimilarity(a, b) {
     let dot = 0, magA = 0, magB = 0;
     for (let i = 0; i < a.length; i++) {
@@ -26,13 +30,23 @@ function cosineSimilarity(a, b) {
 
 class MemoryVectorStore {
     constructor() {
+        /** @type {{ content: string, embedding: number[], metadata: Record<string, any> }[]} */
         this.chunks = [];
     }
 
+    /**
+     * @param {string} content
+     * @param {number[]} embedding
+     * @param {Record<string, any>} metadata
+     */
     add(content, embedding, metadata) {
         this.chunks.push({ content, embedding, metadata });
     }
 
+    /**
+     * @param {number[]} queryEmbedding
+     * @param {number} [k]
+     */
     search(queryEmbedding, k = 4) {
         return this.chunks
             .map(chunk => ({ ...chunk, score: cosineSimilarity(queryEmbedding, chunk.embedding) }))
@@ -41,6 +55,7 @@ class MemoryVectorStore {
     }
 }
 
+/** @type {MemoryVectorStore | null} */
 let vectorStore = null;
 const embeddings = new AzureOpenAIEmbeddings();
 
@@ -59,7 +74,7 @@ export async function buildVectorStore() {
 
     for (const filename of files) {
         const content = readFileSync(join(docsDir, filename), "utf-8");
-        const docTitle = DOC_TITLES[filename] ?? filename;
+        const docTitle = (/** @type {{ [key: string]: string }} */ (DOC_TITLES))[filename] ?? filename;
 
         const chunks = await splitter.createDocuments(
             [content],
@@ -80,6 +95,10 @@ export async function buildVectorStore() {
     return vectorStore;
 }
 
+/**
+ * @param {string} query
+ * @param {number} [k]
+ */
 export async function searchVectorStore(query, k = 4) {
     const store = await buildVectorStore();
     const queryVector = await embeddings.embedQuery(query);
